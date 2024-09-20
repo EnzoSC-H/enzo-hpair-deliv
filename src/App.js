@@ -22,6 +22,9 @@ import EntryModal from './components/EntryModal';
 import { mainListItems } from './components/listItems';
 import { SignInScreen } from './utils/READONLY_firebase';
 import { emptyEntry, subscribeToEntries } from './utils/mutations';
+import TextField from '@mui/material/TextField';
+import { Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+
 
 // MUI styling constants
 
@@ -106,13 +109,31 @@ export default function App() {
 
   const [open, setOpen] = useState(true);
   const toggleDrawer = () => {
-    setOpen(open);
+    setOpen(!open);
   };
 
   // Data fetching from DB. Would not recommend changing.
   // Reference video for snapshot functionality https://www.youtube.com/watch?v=ig91zc-ERSE
 
   const [entries, setEntries] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEntryId, setSelectedEntryId] = useState('');
+  const [openModal, setOpenModal] = useState(false);
+
+  const handleOpenModal = () => {
+    setOpenModal(true);
+  };
+  
+  const handleCloseModal = () => {
+    setOpenModal(false);
+  };
+  
+  const handleDeleteEntry = (entryId) => {
+    setEntries((prevEntries) => 
+      prevEntries.filter(entry => entry.id !== entryId)
+    );
+    handleCloseModal(); // Close the modal after deletion
+  };
 
   useEffect(() => {
     if (!currentUser) {
@@ -127,21 +148,74 @@ export default function App() {
 
   function mainContent() {
     if (isSignedIn) {
+      const filteredEntries = entries.filter(entry => 
+        (entry.name?.toLowerCase().includes(searchTerm.toLowerCase()) || '') ||
+        (entry.email?.toLowerCase().includes(searchTerm.toLowerCase()) || '') ||
+        (entry.user?.toLowerCase().includes(searchTerm.toLowerCase()) || '')
+      );
+  
       return (
         <Grid container spacing={3}>
           <Grid item xs={12}>
+          <Typography variant="h5" gutterBottom>
+            {currentUser ? `Hello, ${currentUser.displayName}` : 'Welcome!'}
+          </Typography>
+        </Grid>
+
+          <Grid item xs={12}>
+            <TextField
+              label="Search Contacts"
+              variant="outlined"
+              fullWidth
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{ mb: 3 }} // Adds margin-bottom for spacing
+            />
+          </Grid>
+          <Grid item xs={12}>
             <Stack direction="row" spacing={3}>
               <EntryModal entry={emptyEntry} type="add" user={currentUser} />
+              <Button
+                variant="outlined"
+                color="primary"
+                onClick={handleOpenModal} // Open the modal
+              >
+                Delete Entry
+              </Button>
             </Stack>
           </Grid>
           <Grid item xs={12}>
-            <BasicTable entries={entries} />
+            <BasicTable entries={filteredEntries} />
           </Grid>
+  
+          {/* Modal for deleting an entry */}
+          <Dialog open={openModal} onClose={handleCloseModal}>
+            <DialogTitle>Delete Entry</DialogTitle>
+            <DialogContent>
+              <TextField
+                label="Entry ID"
+                variant="outlined"
+                fullWidth
+                value={selectedEntryId}
+                onChange={(e) => setSelectedEntryId(e.target.value)}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseModal} color="primary">Cancel</Button>
+              <Button 
+                onClick={() => {
+                  handleDeleteEntry(selectedEntryId);
+                  setSelectedEntryId(''); // Reset the input
+                }} 
+                color="primary"
+              >
+                Delete
+              </Button>
+            </DialogActions>
+          </Dialog>
         </Grid>
-      )
-    } else return (
-      <SignInScreen></SignInScreen>
-    )
+      );
+    } else return <SignInScreen />;
   }
 
   const MenuBar = () => {

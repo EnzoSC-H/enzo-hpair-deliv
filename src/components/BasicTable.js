@@ -20,6 +20,7 @@ export default function BasicTable({ entries }) {
                   <TableCell align="right">Email</TableCell>
                   <TableCell align="right">User</TableCell>
                   <TableCell align="right">Category</TableCell>
+                  <TableCell align="right">ID</TableCell>
                   <TableCell align="right">Open</TableCell>
                </TableRow>
             </TableHead>
@@ -35,6 +36,7 @@ export default function BasicTable({ entries }) {
                      <TableCell align="right"><a href={`mailto:${entry.email}`}>{entry.email}</a></TableCell>
                      <TableCell align="right">{entry.user}</TableCell>
                      <TableCell align="right">{getCategory(entry.category).name}</TableCell>
+                     <TableCell align="right">{entry.id}</TableCell>
                      <TableCell sx={{ "padding-top": 0, "padding-bottom": 0 }} align="right">
                         <EntryModal entry={entry} type="edit" />
                      </TableCell>
